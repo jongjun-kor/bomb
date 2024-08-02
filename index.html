@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>폭탄 피하기 게임</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: #f0f0f0;
+    }
+    #gameCanvas {
+      border: 1px solid black;
+      background-color: white;
+    }
+    .controls {
+      margin-top: 10px;
+      display: flex;
+      justify-content: center;
+    }
+    .button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 15px;
+      margin: 5px;
+      border-radius: 5px;
+      font-size: 18px;
+    }
+    .button:active {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="600" height="400"></canvas>
+  <div class="controls">
+    <button class="button" id="leftButton">Left</button>
+    <button class="button" id="rightButton">Right</button>
+  </div>
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const player = {
+      x: canvas.width / 2,
+      y: canvas.height - 30,
+      width: 50,
+      height: 50,
+      color: 'blue',
+      speed: 5,
+    };
+
+    const bombs = [];
+    let score = 0;
+    let gameOver = false;
+
+    function drawPlayer() {
+      ctx.fillStyle = player.color;
+      ctx.fillRect(player.x, player.y, player.width, player.height);
+    }
+
+    function createBomb() {
+      const size = 20;
+      const x = Math.random() * (canvas.width - size);
+      const y = 0 - size;
+      const speed = Math.random() * 3 + 2;
+      bombs.push({ x, y, size, speed });
+    }
+
+    function drawBombs() {
+      bombs.forEach(bomb => {
+        ctx.fillStyle = 'red';
+        ctx.beginPath();
+        ctx.arc(bomb.x + bomb.size / 2, bomb.y + bomb.size / 2, bomb.size / 2, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+
+    function moveBombs() {
+      bombs.forEach(bomb => {
+        bomb.y += bomb.speed;
+      });
+    }
+
+    function detectCollision() {
+      bombs.forEach(bomb => {
+        if (
+          bomb.x < player.x + player.width &&
+          bomb.x + bomb.size > player.x &&
+          bomb.y < player.y + player.height &&
+          bomb.y + bomb.size > player.y
+        ) {
+          gameOver = true;
+        }
+      });
+    }
+
+    function updateScore() {
+      ctx.fillStyle = 'black';
+      ctx.font = '20px Arial';
+      ctx.fillText(`Score: ${score}`, 10, 20);
+    }
+
+    function gameLoop() {
+      if (gameOver) {
+        ctx.fillStyle = 'black';
+        ctx.font = '50px Arial';
+        ctx.fillText('Game Over', canvas.width / 2 - 150, canvas.height / 2);
+        return;
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      drawPlayer();
+      drawBombs();
+      moveBombs();
+      detectCollision();
+      updateScore();
+
+      score += 1;
+
+      if (Math.random() < 0.02) {
+        createBomb();
+      }
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft' && player.x > 0) {
+        player.x -= player.speed;
+      }
+      if (e.key === 'ArrowRight' && player.x + player.width < canvas.width) {
+        player.x += player.speed;
+      }
+    });
+
+    document.getElementById('leftButton').addEventListener('mousedown', () => {
+      if (player.x > 0) {
+        player.x -= player.speed;
+      }
+    });
+
+    document.getElementById('rightButton').addEventListener('mousedown', () => {
+      if (player.x + player.width < canvas.width) {
+        player.x += player.speed;
+      }
+    });
+
+    gameLoop();
+  </script>
+</body>
+</html>
